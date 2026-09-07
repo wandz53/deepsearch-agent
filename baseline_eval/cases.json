@@ -1,0 +1,44 @@
+[
+  {
+    "id": "T01",
+    "name": "联网研究与证据引用",
+    "question": "请通过网络检索，比较地震预警与地震破裂反投影成像：分别说明目标、输入数据、时间要求和适用局限。检索范围截止2026年9月6日。至少提供3个实际支持正文结论的来源URL，优先采用研究机构或原始论文。区分来源陈述与自己的推断，不编造查不到的信息。将报告保存为T01_research.md，并在最终回复中概括结论和文件位置。本题不需要查询数据库或内部知识库。",
+    "fixtures": [],
+    "expected_files": ["T01_research.md"],
+    "rubric": [
+      {"id":"goals", "criterion":"两种方法的目标区分准确，没有把破裂成像直接等同于地震预警"},
+      {"id":"dimensions", "criterion":"目标、输入数据、时间要求、局限四个维度均得到实质回答"},
+      {"id":"sources", "criterion":"至少3个不同来源URL可定位，并实际支持对应正文结论；人工逐条核查"},
+      {"id":"grounding", "criterion":"关键事实有依据，推断被标明，没有虚构论文、来源或检索结果"},
+      {"id":"file", "criterion":"指定Markdown文件可打开，内容完整且与最终答复一致"}
+    ]
+  },
+  {
+    "id": "T02",
+    "name": "固定数据计算与文件交付",
+    "question": "请读取附件T02_facts.md，只根据附件分析星河样例公司的2025年表现。计算并展示公式、单位及结果：营业收入同比增长率、研发投入占2025年营业收入的比例、年末员工人数同比增长率。不要引入外部事实。生成T02_analysis.md和T02_analysis.pdf，最终回复给出三个计算结果及文件位置。",
+    "fixtures": ["fixtures/T02_facts.md"],
+    "expected_files": ["T02_analysis.md", "T02_analysis.pdf"],
+    "rubric": [
+      {"id":"revenue", "criterion":"营业收入同比增长率为25%，计算为(10-8)/8，年份和单位正确"},
+      {"id":"research", "criterion":"研发投入占2025年营业收入比例为12%，计算为1.2/10"},
+      {"id":"staff", "criterion":"年末员工人数同比增长率为25%，计算为(100-80)/80"},
+      {"id":"grounding", "criterion":"没有补充附件未给出的真实经营事实；明确这是虚构样例数据"},
+      {"id":"files", "criterion":"指定Markdown和PDF均可打开、无明显乱码，三个计算结果一致"}
+    ]
+  },
+  {
+    "id": "T03",
+    "name": "信息不足与口径不一致",
+    "question": "请读取附件T03_sources.md，只依据附件回答：星河样例公司2025年相对2024年的业务增长率是多少？2025年净利润是多少？请说明计算依据；如果材料不足，请具体说明不能计算的原因和需要补充的数据。不要自行补充外部信息。将分析保存为T03_limits.md，并在最终回复中给出结论。",
+    "fixtures": ["fixtures/T03_sources.md"],
+    "expected_files": ["T03_limits.md"],
+    "rubric": [
+      {"id":"scope", "criterion":"识别2024年出货量与2025年销售额属于不同指标、单位，不能直接同比"},
+      {"id":"growth", "criterion":"没有编造增长率，要求补充相同统计口径下两个年度的可比数据"},
+      {"id":"profit", "criterion":"明确2025年净利润无法确定，销售额不等于净利润"},
+      {"id":"missing", "criterion":"提出补充净利润披露，或足以计算净利润的完整收入、成本费用及税费等数据"},
+      {"id":"file", "criterion":"指定Markdown可打开，内容与最终结论一致，无附件外的经营事实"}
+    ]
+  }
+]
