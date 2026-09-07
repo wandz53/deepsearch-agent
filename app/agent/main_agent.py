@@ -18,6 +18,9 @@ from app.agent.prompts import main_agent_content
 from app.agent.subagents.database_query_agent import database_query_agent
 from app.agent.subagents.knowledge_base_agent import knowledge_base_agent
 from app.agent.subagents.network_search_agent import network_search_agent
+#第一次新增文件检查助手
+from app.agent.reviewers.reviewer_agent import reviewer_agent
+
 from app.api.context import (
     reset_session_context,
     set_session_context,
@@ -34,12 +37,14 @@ from app.tools.upload_file_read_tool import read_file_content
 # 1. tools 只放最终交付相关的文件工具
 # 2. subagents 放网络、数据库、RAGFlow 三类信息获取助手
 # 3. checkpointer 通过 thread_id 保存同一会话中的执行上下文
+
+#第一次新增 将reviewer_agent包装成子智能体放入主agent中
 main_agent = create_deep_agent(
     model=model,
     system_prompt=main_agent_content["system_prompt"],
     tools=[generate_markdown, convert_md_to_pdf, read_file_content],
     checkpointer=InMemorySaver(),
-    subagents=[database_query_agent, network_search_agent, knowledge_base_agent],
+    subagents=[database_query_agent, network_search_agent, knowledge_base_agent, reviewer_agent],
 )
 
 # 当前文件位于 app/agent/main_agent.py，parents[1] 即 app 目录
