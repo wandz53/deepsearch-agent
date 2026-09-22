@@ -10,9 +10,11 @@ DeepAgents 可识别的字典式智能体。
 from app.agent.prompts import sub_agents_content
 # Reviewer 的核心字段来自 YAML，便于后续只修改配置即可调整审核触发描述和评审规则
 # tools 为空，表示 Reviewer 当前只负责基于已有结果进行评估，不直接调用外部工具
+
+from app.tools.artifact_check_tool import check_artifacts
 reviewer_agent = {
     "name": sub_agents_content["reviewer"]["name"],
     "description": sub_agents_content["reviewer"]["description"],
     "system_prompt": sub_agents_content["reviewer"]["system_prompt"],
-    "tools":[],
+    "tools":[check_artifacts],
 }

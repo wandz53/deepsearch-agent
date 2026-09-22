@@ -74,19 +74,34 @@ async def run_deep_agent(task_query, session_id):
 
     # 上传文件先落在 updated/session_{session_id}，执行前复制到本次 output 工作目录
     # 这样读文件工具和生成文件工具都只需要围绕同一个 session_dir 工作
+   # 上传文件先落在 updated/session_{session_id}，执行前复制到本次 output 工作目录
     updated_dir_path = project_root_path / "updated" / f"session_{session_id}"
-    updated_info_prompt = ""
-    if updated_dir_path.exists():
-        files = [f.name for f in updated_dir_path.iterdir() if f.is_file()]
-        if files:
-            for filename in files:
-                # copy2 会保留上传文件的修改时间、权限等元数据，便于后续排查文件来源
-                shutil.copy2(updated_dir_path / filename, session_dir / filename)
 
-            # 把上传文件列表注入用户消息，提醒模型先调用 read_file_content 获取附件内容
+    updated_info_prompt = ""
+
+# 记录本次任务的原始上传文件，供后续 Artifact Checker 区分：
+# 输入文件 vs Agent 新生成的交付文件
+    input_files: list[str] = []
+
+    if updated_dir_path.exists():
+        input_files = [
+            f.name
+            for f in updated_dir_path.iterdir()
+            if f.is_file()
+        ]
+
+        if input_files:
+            for filename in input_files:
+                shutil.copy2(
+                    updated_dir_path / filename,
+                    session_dir / filename,
+                )
+
             updated_info_prompt = (
                 "\n    [已上传文件] 已加载到工作目录:\n"
-                + "\n".join([f"    - {f}" for f in files])
+                + "\n".join(
+                    [f"    - {filename}" for filename in input_files]
+                )
                 + "\n    请优先使用工具（read_file_content）读取并参考这些文件。"
             )
 
