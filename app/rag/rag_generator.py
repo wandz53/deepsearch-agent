@@ -68,6 +68,7 @@ class RAGGenerator:
         self,
         question: str,
         top_k: int = 3,
+        score_threshold: float = 0.4,
     ) -> dict:
         """
         输入问题，返回 RAG 回答及来源。
@@ -79,14 +80,20 @@ class RAGGenerator:
         # 第一步：检索知识库
         print("正在检索知识库...")
 
-        results = self.pipeline.retrieve(
+        results = self.pipeline.retrieve_reranked(
             query=question,
-            top_k=top_k,
+            candidate_k=10,
+            top_n=top_k,
+            score_threshold=score_threshold,
         )
 
         if not results:
             return {
-                "answer": "知识库为空，无法找到相关资料。",
+                "answer": (
+                      f"当前知识库中没有检索到相似度达到 "
+                      f"{score_threshold:.2f} 的证据，"
+                      "暂时无法根据现有知识库可靠回答这个问题。"
+                 ),
                 "sources": [],
             }
 
@@ -117,6 +124,7 @@ class RAGGenerator:
                 "source": source,
                 "page": page,
                 "score": item["score"],
+                "rerank_score": item.get("rerank_score"),
                 "chunk_id": item["chunk_id"],
             })
 
@@ -196,6 +204,13 @@ def main():
         default=3,
     )
 
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.4,
+        help="最低余弦相似度阈值",
+    )
+
     args = parser.parse_args()
 
     generator = RAGGenerator()
@@ -203,6 +218,7 @@ def main():
     result = generator.answer(
         question=args.question,
         top_k=args.top_k,
+        score_threshold=args.threshold,
     )
 
     print("\n" + "=" * 50)
@@ -221,6 +237,7 @@ def main():
             f"{item['source']} "
             f"页码={item['page']} "
             f"相似度={item['score']:.4f}"
+            f"重排序={item.get('rerank_score')}"
         )
 
 

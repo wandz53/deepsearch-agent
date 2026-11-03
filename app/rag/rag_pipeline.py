@@ -7,6 +7,7 @@ from app.rag.document_loader import load_document
 from app.rag.chunker import chunk_documents
 from app.rag.embedding import get_embeddings
 from app.rag.vector_store import VectorStore
+from app.rag.reranker import Reranker
 
 
 # 项目根目录
@@ -94,31 +95,90 @@ class RAGPipeline:
 
         return saved_count
 
+   
     def retrieve(
         self,
         query: str,
         top_k: int = 5,
+        score_threshold: float | None = None,
     ) -> list[dict]:
         """
         检索与 Query 最相关的 Chunk。
 
-        Query -> Embedding -> 向量检索
+        参数：
+            query: 用户问题
+            top_k: 初步检索数量
+            score_threshold: 最低余弦相似度阈值
+
+        返回：
+            通过阈值过滤后的检索结果
         """
 
         if not query.strip():
             raise ValueError("Query 不能为空")
 
-        # 第一步：将用户问题转成向量
+        if top_k <= 0:
+            raise ValueError("top_k 必须大于 0")
+
+        if score_threshold is not None:
+            if not -1.0 <= score_threshold <= 1.0:
+                raise ValueError(
+                    "score_threshold 必须在 -1 到 1 之间"
+                )
+
+        # 1. 将用户问题转换为向量
         query_embedding = get_embeddings([query])[0]
 
-        # 第二步：在已有知识库中检索
+        # 2. 从 Vector Store 中检索 Top-K
         results = self.vector_store.search(
             query_embedding=query_embedding,
             top_k=top_k,
         )
 
+        # 3. 根据相似度阈值过滤
+        if score_threshold is not None:
+            results = [
+                item
+                for item in results
+                if item["score"] >= score_threshold
+            ]
+
         return results
 
+
+    def retrieve_reranked(
+        self,
+        query: str,
+        candidate_k: int = 10,
+        top_n: int = 3,
+        score_threshold: float = 0.4,
+    ) -> list[dict]:
+        """
+        两阶段检索：
+        1. 向量检索候选 Chunk
+        2. Rerank 精细排序
+        """
+
+        # 第一阶段：向量检索 + 阈值过滤
+        candidates = self.retrieve(
+            query=query,
+            top_k=candidate_k,
+            score_threshold=score_threshold,
+        )
+
+        if not candidates:
+            return []
+
+        # 第二阶段：Rerank
+        reranker = Reranker()
+
+        results = reranker.rerank(
+            query=query,
+            documents=candidates,
+            top_n=top_n,
+        )
+
+        return results
 
 # ======================================
 # 命令行入口
